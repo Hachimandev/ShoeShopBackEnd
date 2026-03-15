@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 public class DotenvConfig {
 
     public static final Dotenv dotenv = Dotenv.configure()
+            .ignoreIfMissing()
             .filename(".env")
             .load();
 
