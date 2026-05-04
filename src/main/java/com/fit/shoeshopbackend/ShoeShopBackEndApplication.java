@@ -1,6 +1,8 @@
 package com.fit.shoeshopbackend;
 
 import com.fit.shoeshopbackend.config.DotenvConfig;
+import com.fit.shoeshopbackend.config.JwtUtil;
+import com.fit.shoeshopbackend.config.TaiKhoanDetails;
 import com.fit.shoeshopbackend.model.Role;
 import com.fit.shoeshopbackend.model.TaiKhoan;
 import com.fit.shoeshopbackend.repository.TaiKhoanRepository;
@@ -22,10 +24,12 @@ public class ShoeShopBackEndApplication {
         SpringApplication.run(ShoeShopBackEndApplication.class, args);
     }
     @Bean
-    CommandLineRunner initAdmin(TaiKhoanRepository repo, PasswordEncoder encoder) {
+    CommandLineRunner initAdmin(TaiKhoanRepository repo, PasswordEncoder encoder, JwtUtil jwtUtil) {
         return args -> {
+            TaiKhoan admin;
+
             if (!repo.existsByTenDangNhap("admin")) {
-                TaiKhoan admin = TaiKhoan.builder()
+                admin = TaiKhoan.builder()
                         .maTaiKhoan("TK001")
                         .tenDangNhap("admin")
                         .matKhau(encoder.encode("admin123"))
@@ -33,8 +37,14 @@ public class ShoeShopBackEndApplication {
                         .roles(Set.of(Role.ROLE_ADMIN, Role.ROLE_USER))
                         .build();
                 repo.save(admin);
-                System.out.println("Admin created with username=admin password=admin123");
+            } else {
+                admin = repo.findByTenDangNhap("admin").get();
             }
+
+            TaiKhoanDetails details = new TaiKhoanDetails(admin);
+            String token = jwtUtil.generateToken(details);
+
+            System.out.println("JWT Test: " + token);
         };
     }
 
