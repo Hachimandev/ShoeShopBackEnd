@@ -8,6 +8,15 @@ import lombok.Data;
 public class OrderRequest {
     private UserInfo userInfo;
     private Cart cart;
-    private double thanhTien;
+    private double totalAmount;
 }
+
+
+
+
+
+
+
+
+
 
