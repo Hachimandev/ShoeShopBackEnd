@@ -2,16 +2,16 @@ package com.fit.shoeshopbackend.controller;
 
 
 import com.fit.shoeshopbackend.config.JwtUtil;
-import com.fit.shoeshopbackend.config.TaiKhoanDetails;
+import com.fit.shoeshopbackend.config.AccountDetails;
 import com.fit.shoeshopbackend.dto.AuthRequest;
 import com.fit.shoeshopbackend.dto.AuthResponse;
 import com.fit.shoeshopbackend.dto.GoogleLoginRequest;
 import com.fit.shoeshopbackend.dto.RegisterRequest;
-import com.fit.shoeshopbackend.model.KhachHang;
+import com.fit.shoeshopbackend.model.Customer;
 import com.fit.shoeshopbackend.model.Role;
-import com.fit.shoeshopbackend.model.TaiKhoan;
-import com.fit.shoeshopbackend.repository.KhachHangRepository;
-import com.fit.shoeshopbackend.repository.TaiKhoanRepository;
+import com.fit.shoeshopbackend.model.Account;
+import com.fit.shoeshopbackend.repository.CustomerRepository;
+import com.fit.shoeshopbackend.repository.AccountRepository;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -35,17 +35,17 @@ public class AuthController {
 
     @Autowired private AuthenticationManager authenticationManager;
     @Autowired private JwtUtil jwtUtil;
-    @Autowired private TaiKhoanRepository userRepository;
+    @Autowired private AccountRepository userRepository;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired
-    private KhachHangRepository khachHangRepository;
+    private CustomerRepository khachHangRepository;
 
     @PostMapping("/login")
     public AuthResponse login(@RequestBody AuthRequest req) {
         Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword())
         );
-        var userDetails = (TaiKhoanDetails) auth.getPrincipal();
+        var userDetails = (AccountDetails) auth.getPrincipal();
         String token = jwtUtil.generateToken(userDetails);
 
 
@@ -58,30 +58,30 @@ public class AuthController {
     @Transactional
     @PostMapping("/register")
     public String register(@RequestBody RegisterRequest r) {
-        if (userRepository.existsByTenDangNhap(r.getUsername())) return "Username exists";
+        if (userRepository.existsByUsername(r.getUsername())) return "Username exists";
         if (r.getEmail() != null && userRepository.existsByEmail(r.getEmail())) return "Email exists";
 
-        TaiKhoan user = TaiKhoan.builder()
-                .maTaiKhoan(UUID.randomUUID().toString())
-                .tenDangNhap(r.getUsername())
+        Account user = Account.builder()
+                .accountId(UUID.randomUUID().toString())
+                .username(r.getUsername())
                 .email(r.getEmail())
-                .matKhau(passwordEncoder.encode(r.getPassword()))
+                .password(passwordEncoder.encode(r.getPassword()))
                 .roles(Set.of(Role.ROLE_USER))
                 .build();
 
-        KhachHang kh = KhachHang.builder()
-                .maKhachHang(UUID.randomUUID().toString())
-                .hoTen(r.getFullName())
+        Customer kh = Customer.builder()
+                .customerId(UUID.randomUUID().toString())
+                .fullName(r.getFullName())
                 .email(r.getEmail())
-                .sdt(null)
-                .diaChi(null)
-                .diemTichLuy(0)
-                .ngayThamGia(LocalDateTime.now())
-                .tongChiTieu(0)
-                .taiKhoan(user)
+                .phoneNumber(null)
+                .address(null)
+                .loyaltyPoints(0)
+                .joinDate(LocalDateTime.now())
+                .totalSpending(0)
+                .account(user)
                 .build();
 
-        user.setKhachHang(kh);
+        user.setCustomer(kh);
         userRepository.save(user); // cascade ALL sẽ tự lưu KhachHang
 
         return "Registered";
@@ -109,39 +109,39 @@ public class AuthController {
             String fullName = (String) payload.get("name");
 
             // --- kiểm tra tài khoản ---
-            TaiKhoan user = userRepository.findByEmail(email).orElse(null);
+            Account user = userRepository.findByEmail(email).orElse(null);
 
             if (user == null) {
                 // --- tạo tài khoản mới ---
-                user = TaiKhoan.builder()
-                        .maTaiKhoan(UUID.randomUUID().toString())
-                        .tenDangNhap(email)
+                user = Account.builder()
+                        .accountId(UUID.randomUUID().toString())
+                        .username(email)
                         .email(email)
-                        .matKhau(passwordEncoder.encode("GOOGLE_USER"))
+                        .password(passwordEncoder.encode("GOOGLE_USER"))
                         .roles(Set.of(Role.ROLE_USER))
                         .build();
 
-                KhachHang kh = KhachHang.builder()
-                        .maKhachHang(UUID.randomUUID().toString())
-                        .hoTen(fullName)
+                Customer kh = Customer.builder()
+                        .customerId(UUID.randomUUID().toString())
+                        .fullName(fullName)
                         .email(email)
-                        .diemTichLuy(0)
-                        .ngayThamGia(LocalDateTime.now())
-                        .tongChiTieu(0)
-                        .taiKhoan(user)
+                        .loyaltyPoints(0)
+                        .joinDate(LocalDateTime.now())
+                        .totalSpending(0)
+                        .account(user)
                         .build();
 
-                user.setKhachHang(kh);
+                user.setCustomer(kh);
                 userRepository.save(user);
             }
 
             // --- tạo JWT ---
-            TaiKhoanDetails details = new TaiKhoanDetails(user);
+            AccountDetails details = new AccountDetails(user);
             String token = jwtUtil.generateToken(details);
 
             List<String> roles = user.getRoles().stream().map(Enum::name).toList();
 
-            return new AuthResponse(token, user.getTenDangNhap(), roles);
+            return new AuthResponse(token, user.getUsername(), roles);
 
         } catch (Exception e) {
             throw new RuntimeException("Login Google thất bại: " + e.getMessage());
