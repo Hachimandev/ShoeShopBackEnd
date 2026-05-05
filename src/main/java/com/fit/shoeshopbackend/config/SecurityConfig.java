@@ -38,6 +38,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/products/**").permitAll()
                         .requestMatchers("/api/categories/**").permitAll()
+                        .requestMatchers("/api/accounts/me/**").authenticated()
+                        .requestMatchers("/api/accounts/update/**").authenticated()
+                        .requestMatchers("/api/accounts/change-password/**").authenticated()
                         .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated()
                 );

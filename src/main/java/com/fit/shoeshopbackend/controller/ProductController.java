@@ -3,13 +3,17 @@ package com.fit.shoeshopbackend.controller;
 
 import com.fit.shoeshopbackend.model.Product;
 import com.fit.shoeshopbackend.service.ProductService;
+import com.fit.shoeshopbackend.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/products")
@@ -17,6 +21,17 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService ProductService;
+    private final S3Service s3Service;
+
+    @PostMapping("/upload-image")
+    public ResponseEntity<?> uploadProductImage(@RequestParam("file") MultipartFile file) {
+        try {
+            String imageUrl = s3Service.uploadFile(file, "products");
+            return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body("Upload failed: " + e.getMessage());
+        }
+    }
 
 
     @GetMapping
