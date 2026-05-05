@@ -1,7 +1,7 @@
 package com.fit.shoeshopbackend.config;
 
 
-import com.fit.shoeshopbackend.service.TaiKhoanDetailsService;
+import com.fit.shoeshopbackend.service.AccountDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
@@ -19,7 +19,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired private JwtUtil jwtUtil;
-    @Autowired private TaiKhoanDetailsService userDetailsService;
+    @Autowired private AccountDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -44,4 +44,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 }
+
+
+
+
+
+
+
+
+
 

@@ -11,13 +11,22 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CartItemDTO {
-    private String maChiTiet;
-    private Integer soLuong;
-    private String tenSanPham;
-    private Double giaBan;
+    private String productDetailId;
+    private Integer quantity;
+    private String productName;
+    private Double price;
     private Integer size;
-    private String mau;
-    private Integer soLuongTonKho;
-    private String hinhAnh;
+    private String color;
+    private Integer stockQuantity;
+    private String image;
 }
+
+
+
+
+
+
+
+
+
 

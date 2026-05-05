@@ -1,11 +1,10 @@
 package com.fit.shoeshopbackend.controller;
 
-
 import com.fit.shoeshopbackend.dto.Cart;
 import com.fit.shoeshopbackend.dto.CartItemDTO;
-import com.fit.shoeshopbackend.model.ChiTietSanPham;
-import com.fit.shoeshopbackend.service.ChiTietSanPhamService;
-import com.fit.shoeshopbackend.service.HoaDonService;
+import com.fit.shoeshopbackend.model.ProductDetail;
+import com.fit.shoeshopbackend.service.ProductDetailService;
+import com.fit.shoeshopbackend.service.OrderService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,8 +15,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class CartController {
 
-    private final ChiTietSanPhamService chiTietSanPhamService;
-    private final HoaDonService hoaDonService;
+    private final ProductDetailService productDetailService;
+    private final OrderService orderService;
     private static final String CART_SESSION_KEY = "CART";
 
     private Cart getCartFromSession(HttpSession session) {
@@ -33,15 +32,15 @@ public class CartController {
     public ResponseEntity<Cart> addToCart(@RequestBody CartItemDTO item, HttpSession session) {
         Cart cart = getCartFromSession(session);
 
-        ChiTietSanPham chiTiet = chiTietSanPhamService.getChiTietSanPhamById(item.getMaChiTiet())
-                .orElseThrow(() -> new RuntimeException("Chi tiết sản phẩm không tồn tại"));
+        ProductDetail detail = productDetailService.getProductDetailById(item.getProductDetailId())
+                .orElseThrow(() -> new RuntimeException("Product detail not found"));
 
-        item.setGiaBan(chiTiet.getSanPham().getGiaBan());
-        item.setTenSanPham(chiTiet.getSanPham().getTenSanPham());
-        item.setHinhAnh(chiTiet.getSanPham().getHinhAnh());
-        item.setSize(chiTiet.getSize());
-        item.setMau(chiTiet.getMau());
-        cart.addItem(item, chiTiet.getSoLuongTonKho());
+        item.setPrice(detail.getProduct().getPrice());
+        item.setProductName(detail.getProduct().getProductName());
+        item.setImage(detail.getProduct().getImage());
+        item.setSize(detail.getSize());
+        item.setColor(detail.getColor());
+        cart.addItem(item, detail.getStockQuantity());
 
         session.setAttribute(CART_SESSION_KEY, cart);
         return ResponseEntity.ok(cart);
@@ -50,7 +49,7 @@ public class CartController {
     @PostMapping("/remove")
     public ResponseEntity<Cart> removeFromCart(@RequestBody CartItemDTO item, HttpSession session) {
         Cart cart = getCartFromSession(session);
-        cart.removeItem(item.getMaChiTiet());
+        cart.removeItem(item.getProductDetailId());
         session.setAttribute(CART_SESSION_KEY, cart);
         return ResponseEntity.ok(cart);
     }
@@ -59,26 +58,26 @@ public class CartController {
     public ResponseEntity<Cart> updateQuantity(@RequestBody CartItemDTO item, HttpSession session) {
         Cart cart = getCartFromSession(session);
 
-        ChiTietSanPham chiTiet = chiTietSanPhamService.getChiTietSanPhamById(item.getMaChiTiet())
-                .orElseThrow(() -> new RuntimeException("Chi tiết sản phẩm không tồn tại"));
+        ProductDetail detail = productDetailService.getProductDetailById(item.getProductDetailId())
+                .orElseThrow(() -> new RuntimeException("Product detail not found"));
 
-        cart.updateQuantity(item.getMaChiTiet(), item.getSoLuong(), chiTiet.getSoLuongTonKho());
+        cart.updateQuantity(item.getProductDetailId(), item.getQuantity(), detail.getStockQuantity());
         session.setAttribute(CART_SESSION_KEY, cart);
         return ResponseEntity.ok(cart);
     }
 
     @PostMapping("/apply-promo")
-    public ResponseEntity<Cart> applyPromo(@RequestParam String maKhuyenMai, HttpSession session) {
+    public ResponseEntity<Cart> applyPromo(@RequestParam String promotionId, HttpSession session) {
         Cart cart = getCartFromSession(session);
-        cart.setMaKhuyenMai(maKhuyenMai);
+        cart.setPromotionId(promotionId);
         session.setAttribute(CART_SESSION_KEY, cart);
         return ResponseEntity.ok(cart);
     }
 
     @PostMapping("/use-points")
-    public ResponseEntity<Cart> usePoints(@RequestParam int diem, HttpSession session) {
+    public ResponseEntity<Cart> usePoints(@RequestParam int points, HttpSession session) {
         Cart cart = getCartFromSession(session);
-        cart.setDiemSuDung(diem);
+        cart.setUsedPoints(points);
         session.setAttribute(CART_SESSION_KEY, cart);
         return ResponseEntity.ok(cart);
     }
@@ -94,7 +93,7 @@ public class CartController {
     @GetMapping("/summary")
     public ResponseEntity<Object> getCartSummary(HttpSession session) {
         Cart cart = getCartFromSession(session);
-        Object summary = hoaDonService.getCartSummary(cart);
+        Object summary = orderService.getCartSummary(cart);
         return ResponseEntity.ok(summary);
     }
 }

@@ -2,10 +2,10 @@ package com.fit.shoeshopbackend;
 
 import com.fit.shoeshopbackend.config.DotenvConfig;
 import com.fit.shoeshopbackend.config.JwtUtil;
-import com.fit.shoeshopbackend.config.TaiKhoanDetails;
+import com.fit.shoeshopbackend.config.AccountDetails;
 import com.fit.shoeshopbackend.model.Role;
-import com.fit.shoeshopbackend.model.TaiKhoan;
-import com.fit.shoeshopbackend.repository.TaiKhoanRepository;
+import com.fit.shoeshopbackend.model.Account;
+import com.fit.shoeshopbackend.repository.AccountRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -24,24 +24,24 @@ public class ShoeShopBackEndApplication {
         SpringApplication.run(ShoeShopBackEndApplication.class, args);
     }
     @Bean
-    CommandLineRunner initAdmin(TaiKhoanRepository repo, PasswordEncoder encoder, JwtUtil jwtUtil) {
+    CommandLineRunner initAdmin(AccountRepository repo, PasswordEncoder encoder, JwtUtil jwtUtil) {
         return args -> {
-            TaiKhoan admin;
+            Account admin;
 
-            if (!repo.existsByTenDangNhap("admin")) {
-                admin = TaiKhoan.builder()
-                        .maTaiKhoan("TK001")
-                        .tenDangNhap("admin")
-                        .matKhau(encoder.encode("admin123"))
+            if (!repo.existsByUsername("admin")) {
+                admin = Account.builder()
+                        .accountId("TK001")
+                        .username("admin")
+                        .password(encoder.encode("admin123"))
                         .email("admin@example.com")
                         .roles(Set.of(Role.ROLE_ADMIN, Role.ROLE_USER))
                         .build();
                 repo.save(admin);
             } else {
-                admin = repo.findByTenDangNhap("admin").get();
+                admin = repo.findByUsername("admin").get();
             }
 
-            TaiKhoanDetails details = new TaiKhoanDetails(admin);
+            AccountDetails details = new AccountDetails(admin);
             String token = jwtUtil.generateToken(details);
 
             System.out.println("JWT Test: " + token);
@@ -49,3 +49,12 @@ public class ShoeShopBackEndApplication {
     }
 
 }
+
+
+
+
+
+
+
+
+
