@@ -11,7 +11,7 @@ public class UserInfo {
     private String tinhThanh;
     private String quanHuyen;
     private String phuongXa;
-    private String PaymentMethod;
+    private String paymentMethod;
     private String ghiChu;
 }
 

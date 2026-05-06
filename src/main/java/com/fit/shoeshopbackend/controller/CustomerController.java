@@ -27,17 +27,17 @@ public class CustomerController {
 
     private final CustomerService customerService;
 
-    @GetMapping("/points/{username}")
+    @GetMapping("/points/{username:.+}")
     public int getLoyaltyPoints(@PathVariable String username) {
         return customerService.getLoyaltyPointsByUsername(username);
     }
 
-    @GetMapping("/{username}")
+    @GetMapping("/{username:.+}")
     public Customer getCustomer(@PathVariable String username) {
         return customerService.findByAccount_Username(username);
     }
 
-    @GetMapping("/info/{username}")
+    @GetMapping("/info/{username:.+}")
     public CustomerDTO getCustomerInfo(@PathVariable String username) {
         Customer customer = customerService.findByAccount_Username(username);
         if (customer == null) return null;
@@ -81,7 +81,7 @@ public class CustomerController {
         );
     }
 
-    @PutMapping("/update/{username}")
+    @PutMapping("/update/{username:.+}")
     public ResponseEntity<?> updateCustomerInfo(
             @PathVariable String username,
             @RequestBody UpdateCustomerDTO dto
