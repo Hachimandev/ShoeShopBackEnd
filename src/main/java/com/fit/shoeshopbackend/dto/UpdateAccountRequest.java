@@ -5,7 +5,15 @@ import lombok.Data;
 @Data
 public class UpdateAccountRequest {
     private String email;
-    private String hoTen;
-    private String sdt;
-    private String diaChi;
+    private String fullName;
+    private String phoneNumber;
+    private String address;
 }
+
+
+
+
+
+
+
+

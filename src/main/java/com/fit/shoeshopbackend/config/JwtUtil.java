@@ -22,7 +22,7 @@ public class JwtUtil {
     @Value("${jwt.expiration-ms}")
     private Long jwtExpirationMs;
 
-    public String generateToken(TaiKhoanDetails userDetails) {
+    public String generateToken(AccountDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -52,3 +52,11 @@ public class JwtUtil {
         }
     }
 }
+
+
+
+
+
+
+
+

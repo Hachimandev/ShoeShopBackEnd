@@ -1,7 +1,7 @@
 package com.fit.shoeshopbackend.config;
 
 
-import com.fit.shoeshopbackend.service.TaiKhoanDetailsService;
+import com.fit.shoeshopbackend.service.AccountDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.*;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,7 +26,7 @@ import java.util.List;
 public class SecurityConfig {
 
     @Autowired private JwtAuthenticationFilter jwtFilter;
-    @Autowired private TaiKhoanDetailsService userDetailsService;
+    @Autowired private AccountDetailsService userDetailsService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -36,6 +36,11 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/products/**").permitAll()
+                        .requestMatchers("/api/categories/**").permitAll()
+                        .requestMatchers("/api/accounts/me/**").authenticated()
+                        .requestMatchers("/api/accounts/update/**").authenticated()
+                        .requestMatchers("/api/accounts/change-password/**").authenticated()
                         .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated()
                 );
@@ -72,3 +77,12 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 }
+
+
+
+
+
+
+
+
+

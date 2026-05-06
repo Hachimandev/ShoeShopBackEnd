@@ -8,8 +8,8 @@ import java.util.List;
 @Data
 public class Cart {
     private List<CartItemDTO> items = new ArrayList<>();
-    private String maKhuyenMai;
-    private int diemSuDung;
+    private String promotionId;
+    private int usedPoints;
 
     public Cart() {}
 
@@ -19,42 +19,51 @@ public class Cart {
 
     public double getSubtotal() {
         return items.stream()
-                .mapToDouble(item -> item.getGiaBan() * item.getSoLuong())
+                .mapToDouble(item -> item.getPrice() * item.getQuantity())
                 .sum();
     }
 
-    public void addItem(CartItemDTO newItem, int soLuongTonKho) {
+    public void addItem(CartItemDTO newItem, int stockQuantity) {
         boolean found = false;
         for (CartItemDTO item : items) {
-            if (item.getMaChiTiet().equals(newItem.getMaChiTiet())) {
-                int updatedQty = item.getSoLuong() + newItem.getSoLuong();
-                item.setSoLuong(Math.min(updatedQty, soLuongTonKho));
+            if (item.getProductDetailId().equals(newItem.getProductDetailId())) {
+                int updatedQty = item.getQuantity() + newItem.getQuantity();
+                item.setQuantity(Math.min(updatedQty, stockQuantity));
                 found = true;
                 break;
             }
         }
         if (!found) {
-            newItem.setSoLuong(Math.min(newItem.getSoLuong(), soLuongTonKho));
+            newItem.setQuantity(Math.min(newItem.getQuantity(), stockQuantity));
             items.add(newItem);
         }
     }
 
-    public void updateQuantity(String maChiTiet, int soLuong, int soLuongTonKho) {
+    public void updateQuantity(String productDetailId, int quantity, int stockQuantity) {
         for (CartItemDTO item : items) {
-            if (item.getMaChiTiet().equals(maChiTiet)) {
-                item.setSoLuong(Math.min(soLuong, soLuongTonKho));
+            if (item.getProductDetailId().equals(productDetailId)) {
+                item.setQuantity(Math.min(quantity, stockQuantity));
                 break;
             }
         }
     }
 
-    public void removeItem(String maChiTiet) {
-        items.removeIf(item -> item.getMaChiTiet().equals(maChiTiet));
+    public void removeItem(String productDetailId) {
+        items.removeIf(item -> item.getProductDetailId().equals(productDetailId));
     }
 
     public void clear() {
         items.clear();
-        maKhuyenMai = null;
-        diemSuDung = 0;
+        promotionId = null;
+        usedPoints = 0;
     }
 }
+
+
+
+
+
+
+
+
+
