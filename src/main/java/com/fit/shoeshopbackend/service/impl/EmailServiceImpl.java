@@ -55,7 +55,7 @@ public class EmailServiceImpl implements EmailService {
 
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Gửi email thất bại");
+            System.err.println("Gửi email thất bại, nhưng đơn hàng vẫn được tạo.");
         }
     }
 }
