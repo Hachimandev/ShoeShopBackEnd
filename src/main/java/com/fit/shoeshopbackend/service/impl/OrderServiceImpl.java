@@ -139,7 +139,16 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Customer customer = customerRepository.findByEmail(request.getUserInfo().getEmail())
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+                .orElseGet(() -> {
+                    Customer newCustomer = new Customer();
+                    newCustomer.setCustomerId(java.util.UUID.randomUUID().toString());
+                    newCustomer.setFullName(request.getUserInfo().getFullName());
+                    newCustomer.setEmail(request.getUserInfo().getEmail());
+                    newCustomer.setPhoneNumber(request.getUserInfo().getPhoneNumber());
+                    newCustomer.setAddress(request.getUserInfo().getAddress());
+                    newCustomer.setJoinDate(LocalDateTime.now());
+                    return customerRepository.save(newCustomer);
+                });
         order.setCustomer(customer);
 
         if (request.getCart().getPromotionId() != null) {
