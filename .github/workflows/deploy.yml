@@ -1,0 +1,30 @@
+name: CI/CD Pipeline for ShoeShop Backend
+
+on:
+  push:
+    branches: [ "main" ] # Kích hoạt khi có code đẩy lên nhánh main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Deploy to EC2 via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          # 1. Di chuyển vào thư mục chứa mã nguồn trên EC2
+          cd ~/ShoeShopBackEnd
+          
+          # 2. Kéo code mới nhất từ GitHub về EC2
+          git pull origin main
+          
+          # 3. Build lại duy nhất Container Backend với các sửa đổi mới nhất
+          # Chỉ định rõ service "backend" để không ảnh hưởng tới Database
+          DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker-compose up -d --build backend
+          
+          # 4. Dọn dẹp các image rác/cũ để tiết kiệm dung lượng ổ cứng EC2
+          docker image prune -f
