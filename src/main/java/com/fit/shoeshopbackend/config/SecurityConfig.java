@@ -65,6 +65,10 @@ public class SecurityConfig {
         config.setAllowCredentials(false);
         // Allow dev frontend with pattern matching (no credentials needed for public API)
         config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedOriginPatterns(Arrays.asList(
+        "http://localhost:3000", 
+        "https://shoe-shop-front-end-flax.vercel.app"
+    ));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setExposedHeaders(List.of("Authorization", "Content-Type"));
