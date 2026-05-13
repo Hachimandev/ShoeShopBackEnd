@@ -41,7 +41,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/accounts/me/**").authenticated()
                         .requestMatchers("/api/accounts/update/**").authenticated()
                         .requestMatchers("/api/accounts/change-password/**").authenticated()
+                        .requestMatchers("/api/staffs/**").permitAll()
+                        .requestMatchers("/api/orders/**").permitAll()
+                        .requestMatchers("/api/suppliers/**").permitAll()
+                        .requestMatchers("/api/promotions/**").permitAll()
+                        .requestMatchers("/api/customers/**").permitAll()
+                        .requestMatchers("/api/comments/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
+
                         .anyRequest().authenticated()
                 );
 
