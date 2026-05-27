@@ -48,6 +48,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/promotions/**").permitAll()
                         .requestMatchers("/api/customers/**").permitAll()
                         .requestMatchers("/api/comments/**").permitAll()
+                        .requestMatchers("/api/ai/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
 
                         .anyRequest().authenticated()
@@ -66,6 +67,9 @@ public class SecurityConfig {
         config.setAllowCredentials(false);
         // Allow dev frontend with pattern matching (no credentials needed for public API)
         config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedOrigins(List.of(
+                "https://shoe-shop-front-end-flax.vercel.app/"
+        ));
         config.setAllowedOriginPatterns(Arrays.asList(
         "http://localhost:3000", 
         "https://shoe-shop-front-end-flax.vercel.app"

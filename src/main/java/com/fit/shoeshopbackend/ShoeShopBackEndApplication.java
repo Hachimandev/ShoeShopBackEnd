@@ -14,7 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Set;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.fit")
 public class ShoeShopBackEndApplication {
 
     public static void main(String[] args) {
