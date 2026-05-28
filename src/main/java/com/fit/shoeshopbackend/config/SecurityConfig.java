@@ -4,6 +4,7 @@ package com.fit.shoeshopbackend.config;
 import com.fit.shoeshopbackend.service.AccountDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.*;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -37,17 +38,34 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/products/**").permitAll()
-                        .requestMatchers("/api/categories/**").permitAll()
+                        // Public GET endpoints
+                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/promotions/**").permitAll()
+                        
+                        // Authenticated user endpoints
                         .requestMatchers("/api/accounts/me/**").authenticated()
                         .requestMatchers("/api/accounts/update/**").authenticated()
                         .requestMatchers("/api/accounts/change-password/**").authenticated()
-                        .requestMatchers("/api/staffs/**").permitAll()
-                        .requestMatchers("/api/orders/**").permitAll()
-                        .requestMatchers("/api/suppliers/**").permitAll()
-                        .requestMatchers("/api/promotions/**").permitAll()
-                        .requestMatchers("/api/customers/**").permitAll()
-                        .requestMatchers("/api/comments/**").permitAll()
+                        .requestMatchers("/api/orders/checkout").authenticated()
+                        .requestMatchers("/api/customers/points/**").authenticated()
+                        .requestMatchers("/api/customers/info/**").authenticated()
+                        .requestMatchers("/api/customers/update/**").authenticated()
+                        
+                        // Admin-only endpoints
+                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/staffs/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/orders/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/suppliers/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/promotions/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/customers/list/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/customers/search/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/customers/stats/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/customers/export/**").hasAuthority("ROLE_ADMIN")
+                        
                         .requestMatchers("/api/ai/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
 
