@@ -1,43 +1,54 @@
-- name: Deploy to EC2 via SSH
-  uses: appleboy/ssh-action@v1.0.0
-  with:
-    host: ${{ secrets.HOST }}
-    username: ubuntu
-    key: ${{ secrets.SSH_KEY }}
-    timeout: 120s
-    command_timeout: 30m
-    script: |
-      set -e
+name: CI/CD Pipeline for ShoeShop Backend
 
-      cd ~/ShoeShopBackEnd
+on:
+  push:
+    branches: [ "main" ]
 
-      echo "===== Pull latest code ====="
-      git pull origin main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-      echo "===== Stop old containers ====="
-      docker-compose down
+    steps:
+    - name: Deploy to EC2 via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.HOST }}
+        username: ubuntu
+        key: ${{ secrets.SSH_KEY }}
+        timeout: 120s
+        command_timeout: 30m
+        script: |
+          set -e
 
-      echo "===== Build backend ====="
-      DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker-compose build backend
+          cd ~/ShoeShopBackEnd
 
-      echo "===== Start containers ====="
-      docker-compose up -d
+          echo "===== Pull latest code ====="
+          git pull origin main
 
-      echo "===== Wait for backend startup ====="
-      sleep 30
+          echo "===== Stop old containers ====="
+          docker-compose down
 
-      echo "===== Backend logs ====="
-      docker logs shoeshop_backend --tail 50
+          echo "===== Build backend ====="
+          DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker-compose build backend
 
-      echo "===== Health check ====="
-      for i in {1..10}; do
-        curl -f http://localhost:8080/api/products && break
-        echo "Retry $i..."
-        sleep 10
-      done
+          echo "===== Start containers ====="
+          docker-compose up -d
 
-      echo "===== Remove unused images ====="
-      docker image prune -af
+          echo "===== Wait for backend startup ====="
+          sleep 30
 
-      echo "===== Running containers ====="
-      docker ps
+          echo "===== Backend logs ====="
+          docker logs shoeshop_backend --tail 50
+
+          echo "===== Health check ====="
+          for i in {1..10}; do
+            curl -f http://localhost:8080/api/products && break
+            echo "Retry $i..."
+            sleep 10
+          done
+
+          echo "===== Remove unused images ====="
+          docker image prune -af
+
+          echo "===== Running containers ====="
+          docker ps
