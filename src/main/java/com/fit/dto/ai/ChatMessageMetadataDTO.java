@@ -13,4 +13,5 @@ public class ChatMessageMetadataDTO {
     private SuggestedProduct[] suggestedProducts;
     private OrderCreatedInfoDTO orderCreated;
     private String actionTaken;
+    private String orderStep;
 }

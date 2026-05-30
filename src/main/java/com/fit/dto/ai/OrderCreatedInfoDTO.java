@@ -14,4 +14,5 @@ public class OrderCreatedInfoDTO {
     private String status;
     private double totalAmount;
     private OrderItemInfoDTO[] items;
+    private String orderLink; // Link to view order details
 }

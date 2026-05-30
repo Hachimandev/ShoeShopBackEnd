@@ -15,5 +15,6 @@ import java.util.List;
 public class AIChatRequestDTO {
     private String message;
     private List<ChatMessageDTO> conversationHistory;
-    private String userId;
+    private String userId; // Session ID
+    private String customerId; // Customer ID for order creation
 }
