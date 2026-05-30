@@ -48,6 +48,13 @@ public class AIAgentService {
 
             boolean isContinuingOrderFlow = lastStep != null && historicProducts != null && historicProducts.length > 0;
 
+            // Abort old order flow if this is explicitly a new search or new order query
+            if (isContinuingOrderFlow && isSearchOrNewOrderIntent(userMessage, analysis)) {
+                isContinuingOrderFlow = false;
+                lastStep = null;
+                historicProducts = null;
+            }
+
             // Search for products if intent is to search/find
             SuggestedProduct[] suggestedProducts = null;
             if (analysis.isSearchIntent()) {
@@ -66,7 +73,7 @@ public class AIAgentService {
                         ? suggestedProducts : historicProducts;
 
                 // Process order with customer information
-                OrderFlowResult result = autoPlaceOrder(activeProducts, analysis, customerId, userMessage, lastStep);
+                OrderFlowResult result = autoPlaceOrder(activeProducts, analysis, customerId, userMessage, lastStep, request.getConversationHistory());
                 orderCreated = result.orderCreatedInfo;
                 actionPerformed = result.actionPerformed;
                 orderStep = result.orderStep;
@@ -224,7 +231,7 @@ public class AIAgentService {
      * Auto place order with customer info validation
      */
     private OrderFlowResult autoPlaceOrder(SuggestedProduct[] suggestedProducts, MessageAnalysis analysis, 
-                                           String customerId, String userMessage, String lastStep) {
+                                           String customerId, String userMessage, String lastStep, List<ChatMessageDTO> conversationHistory) {
         try {
             if (suggestedProducts == null || suggestedProducts.length == 0) {
                 return new OrderFlowResult(null, null, "NO_PRODUCTS", null);
@@ -247,12 +254,23 @@ public class AIAgentService {
 
             log.info("Processing order for customer: {}", customer.getCustomerId());
 
+            // If they want to cancel, abort the flow immediately
+            if (isCancellationMessage(userMessage)) {
+                return new OrderFlowResult(
+                    null,
+                    "Đã hủy yêu cầu đặt hàng.",
+                    null,
+                    null
+                );
+            }
+
             // Check if customer has address and phone
             boolean hasAddress = customer.getAddress() != null && !customer.getAddress().isEmpty();
             boolean hasPhone = customer.getPhoneNumber() != null && !customer.getPhoneNumber().isEmpty();
 
             // Try to extract address and phone from current message
-            AddressPhoneInfo extractedInfo = extractAddressPhoneFromMessage(userMessage);
+            boolean isReplyingToAddressPrompt = "ASKING_FOR_ADDRESS".equals(lastStep);
+            AddressPhoneInfo extractedInfo = extractAddressPhoneFromMessage(userMessage, !hasAddress, !hasPhone, isReplyingToAddressPrompt);
 
             // Update customer with extracted info if provided
             String newAddress = extractedInfo.address != null ? extractedInfo.address : customer.getAddress();
@@ -267,13 +285,39 @@ public class AIAgentService {
                 }
                 hasAddress = true;
                 hasPhone = true;
+            } else {
+                // If we don't have both yet, but we extracted one, let's save the extracted one!
+                if (extractedInfo.address != null) {
+                    customer.setAddress(extractedInfo.address);
+                    customerRepository.save(customer);
+                    hasAddress = true;
+                }
+                if (extractedInfo.phone != null) {
+                    customer.setPhoneNumber(extractedInfo.phone);
+                    customerRepository.save(customer);
+                    hasPhone = true;
+                }
             }
 
             // If missing address or phone, ask for them
-            if (!hasAddress || !hasPhone) {
+            if (!hasAddress && !hasPhone) {
                 return new OrderFlowResult(
                     null,
                     "Vui lòng nhập địa chỉ và số điện thoại",
+                    "ASKING_FOR_ADDRESS",
+                    suggestedProducts
+                );
+            } else if (!hasAddress) {
+                return new OrderFlowResult(
+                    null,
+                    "Vui lòng nhập địa chỉ",
+                    "ASKING_FOR_ADDRESS",
+                    suggestedProducts
+                );
+            } else if (!hasPhone) {
+                return new OrderFlowResult(
+                    null,
+                    "Vui lòng nhập số điện thoại",
                     "ASKING_FOR_ADDRESS",
                     suggestedProducts
                 );
@@ -281,11 +325,12 @@ public class AIAgentService {
 
             // Check if user is confirming or denying the order
             boolean isConfirming = isConfirmationMessage(userMessage);
+            int quantity = extractQuantityFromHistory(userMessage, conversationHistory);
 
             // If we were in ASKING_FOR_CONFIRMATION, we check for yes/no response
             if ("ASKING_FOR_CONFIRMATION".equals(lastStep)) {
                 if (isConfirming) {
-                    OrderCreatedInfoDTO createdOrder = createOrder(suggestedProducts[0], customer, analysis);
+                    OrderCreatedInfoDTO createdOrder = createOrder(suggestedProducts[0], customer, analysis, quantity);
                     return new OrderFlowResult(
                         createdOrder,
                         String.format("Đơn hàng của bạn đã được tạo thành công! Mã đơn: %s", createdOrder.getOrderId()),
@@ -303,9 +348,10 @@ public class AIAgentService {
                     // Prompt again for confirmation
                     SuggestedProduct topProduct = suggestedProducts[0];
                     String confirmMessage = String.format(
-                        "Mình chưa rõ ý bạn. Bạn có xác nhận đặt %s (giá: %,d ₫) giao tới địa chỉ %s, SĐT %s không? (Gõ 'có' hoặc 'không')",
+                        "Mình chưa rõ ý bạn. Bạn có xác nhận đặt %d đôi %s (tổng tiền: %,d ₫) giao tới địa chỉ %s, SĐT %s không? (Gõ 'có' hoặc 'không')",
+                        quantity,
                         topProduct.getName(),
-                        (long) topProduct.getPrice(),
+                        (long) (topProduct.getPrice() * quantity),
                         customer.getAddress(),
                         customer.getPhoneNumber()
                     );
@@ -321,9 +367,10 @@ public class AIAgentService {
             // If we have all info but haven't asked for confirmation yet
             SuggestedProduct topProduct = suggestedProducts[0];
             String confirmMessage = String.format(
-                "Mình sẽ đặt %s (giá: %,d ₫) giao tới địa chỉ %s, SĐT %s. Bạn xác nhận chứ?",
+                "Mình sẽ đặt %d đôi %s (tổng tiền: %,d ₫) giao tới địa chỉ %s, SĐT %s. Bạn xác nhận chứ?",
+                quantity,
                 topProduct.getName(),
-                (long) topProduct.getPrice(),
+                (long) (topProduct.getPrice() * quantity),
                 customer.getAddress(),
                 customer.getPhoneNumber()
             );
@@ -348,10 +395,9 @@ public class AIAgentService {
     /**
      * Create actual order in database
      */
-    private OrderCreatedInfoDTO createOrder(SuggestedProduct topProduct, Customer customer, MessageAnalysis analysis) {
+    private OrderCreatedInfoDTO createOrder(SuggestedProduct topProduct, Customer customer, MessageAnalysis analysis, int quantity) {
         try {
-            int quantity = extractQuantityFromAnalysis(analysis);
-            if (quantity == 0) {
+            if (quantity <= 0) {
                 quantity = 1;
             }
 
@@ -414,7 +460,7 @@ public class AIAgentService {
                     .status(savedOrder.getOrderStatus().toString())
                     .totalAmount(totalAmount)
                     .items(new OrderItemInfoDTO[]{item})
-                    .orderLink("/profile/orders")
+                    .orderLink("/profile/orders/" + savedOrder.getOrderId())
                     .build();
 
         } catch (Exception e) {
@@ -426,7 +472,7 @@ public class AIAgentService {
     /**
      * Extract address and phone from message
      */
-    private AddressPhoneInfo extractAddressPhoneFromMessage(String message) {
+    private AddressPhoneInfo extractAddressPhoneFromMessage(String message, boolean needsAddress, boolean needsPhone, boolean isReplyingToAddressPrompt) {
         AddressPhoneInfo info = new AddressPhoneInfo();
         
         // 1. Extract phone number: look for 9-11 digits
@@ -455,14 +501,26 @@ public class AIAgentService {
             }
         }
         
-        // Option B: If no explicit prefix but we have a phone number, the rest might be the address
-        if (info.address == null && info.phone != null) {
-            // Remove the phone number and phone keywords from the message, the rest might be the address
-            String cleanMsg = message.replaceAll("(?i)(?:sdt|sđt|phone|số|điện|đt)?\\s*:?\\s*" + info.phone, "")
-                                     .replaceAll("(?i)địa\\s*chỉ|address", "")
-                                     .replaceAll("[,;\\-\\s\\n]+", " ").trim();
-            if (cleanMsg.length() > 5) {
-                info.address = cleanMsg;
+        // Option B: If we still don't have the address and we are in the middle of replying to the address prompt:
+        if (info.address == null && isReplyingToAddressPrompt) {
+            if (needsAddress) {
+                // If they need to provide an address, and they provided a phone number,
+                // the remaining text is the address.
+                if (info.phone != null) {
+                    String cleanMsg = message.replaceAll("(?i)(?:sdt|sđt|phone|số|điện|đt)?\\s*:?\\s*" + info.phone, "")
+                                             .replaceAll("(?i)địa\\s*chỉ|address", "")
+                                             .replaceAll("[,;\\-\\s\\n]+", " ").trim();
+                    if (cleanMsg.length() > 5) {
+                        info.address = cleanMsg;
+                    }
+                } else {
+                    // If they did not provide a phone number, the ENTIRE message is likely the address!
+                    // Let's filter out general confirmations/denials like "ok", "yes", "có", "không"
+                    String cleanMsg = message.trim();
+                    if (cleanMsg.length() > 5 && !isConfirmationMessage(cleanMsg) && !isCancellationMessage(cleanMsg)) {
+                        info.address = cleanMsg;
+                    }
+                }
             }
         }
 
@@ -525,10 +583,76 @@ public class AIAgentService {
     }
 
     /**
-     * Extract quantity from message analysis
+     * Extract quantity from a message string
      */
-    private int extractQuantityFromAnalysis(MessageAnalysis analysis) {
-        // Simple implementation - in real scenario, parse quantity from message
+    private int extractQuantityFromMessage(String message) {
+        if (message == null || message.isEmpty()) {
+            return 1;
+        }
+        String lowerMsg = message.toLowerCase();
+
+        // 1. Match patterns like "số lượng: 2", "số lượng là 2", "quantity: 2", "sl: 2", "sl 2", "qty 2"
+        java.util.regex.Pattern pattern1 = java.util.regex.Pattern.compile(
+            "(?:số\\s*lượng|quantity|sl|qty)\\s*(?:là|:)?\\s*([0-9]+)",
+            java.util.regex.Pattern.CASE_INSENSITIVE
+        );
+        java.util.regex.Matcher matcher1 = pattern1.matcher(lowerMsg);
+        if (matcher1.find()) {
+            try {
+                int qty = Integer.parseInt(matcher1.group(1));
+                if (qty > 0) return qty;
+            } catch (NumberFormatException e) {
+                // Ignore
+            }
+        }
+
+        // 2. Match patterns like "2 đôi", "2 chiếc", "2 cái", "mua 2", "lấy 2"
+        java.util.regex.Pattern pattern2 = java.util.regex.Pattern.compile(
+            "(?:mua|lấy)?\\s*([0-9]+)\\s*(?:đôi|chiếc|cái|cặp)?",
+            java.util.regex.Pattern.CASE_INSENSITIVE
+        );
+        java.util.regex.Matcher matcher2 = pattern2.matcher(lowerMsg);
+        if (matcher2.find()) {
+            try {
+                String numStr = matcher2.group(1);
+                int qty = Integer.parseInt(numStr);
+                
+                String matchedText = matcher2.group(0);
+                if (matchedText.contains("đôi") || matchedText.contains("chiếc") 
+                        || matchedText.contains("cái") || matchedText.contains("cặp")
+                        || matchedText.startsWith("mua") || matchedText.startsWith("lấy")) {
+                    if (qty > 0 && qty < 100) {
+                        return qty;
+                    }
+                }
+            } catch (NumberFormatException e) {
+                // Ignore
+            }
+        }
+
+        return 1;
+    }
+
+    /**
+     * Extract quantity from history and current message
+     */
+    private int extractQuantityFromHistory(String currentMessage, List<ChatMessageDTO> history) {
+        int qty = extractQuantityFromMessage(currentMessage);
+        if (qty > 1) {
+            return qty;
+        }
+
+        if (history != null) {
+            for (int i = history.size() - 1; i >= 0; i--) {
+                ChatMessageDTO msg = history.get(i);
+                if ("user".equalsIgnoreCase(msg.getRole())) {
+                    qty = extractQuantityFromMessage(msg.getContent());
+                    if (qty > 1) {
+                        return qty;
+                    }
+                }
+            }
+        }
         return 1;
     }
 
@@ -619,6 +743,32 @@ public class AIAgentService {
                 this.actionPerformed = "AUTO_ORDER_CREATED";
             }
         }
+    }
+
+    /**
+     * Check if the user message indicates a new search or a new order query
+     */
+    private boolean isSearchOrNewOrderIntent(String message, MessageAnalysis analysis) {
+        String lowerMsg = message.toLowerCase();
+        // If it explicitly contains address/phone keywords, it is NOT a search/new order intent
+        if (lowerMsg.contains("địa chỉ") || lowerMsg.contains("address") 
+                || lowerMsg.contains("sđt") || lowerMsg.contains("sdt") 
+                || lowerMsg.contains("số điện thoại") || lowerMsg.contains("phone")) {
+            return false;
+        }
+        
+        // If it explicitly contains delivery/shipping keywords, it is NOT a search/new order intent
+        if (lowerMsg.contains("giao") || lowerMsg.contains("nhận") || lowerMsg.contains("ship")) {
+            return false;
+        }
+        
+        // If it's a confirmation/cancellation, it's not a new search/order
+        if (isConfirmationMessage(message) || isCancellationMessage(message)) {
+            return false;
+        }
+        
+        // Otherwise, check if it matches search or order intent
+        return analysis.isSearchIntent() || analysis.isOrderIntent();
     }
 
     /**
