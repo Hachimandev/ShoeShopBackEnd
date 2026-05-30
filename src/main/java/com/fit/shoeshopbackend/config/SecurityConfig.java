@@ -52,13 +52,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/customers/points/**").authenticated()
                         .requestMatchers("/api/customers/info/**").authenticated()
                         .requestMatchers("/api/customers/update/**").authenticated()
+                        .requestMatchers("/api/orders/**").authenticated()
                         
                         // Admin-only endpoints
                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/staffs/**").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers("/api/orders/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/suppliers/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/promotions/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/customers/list/**").hasAuthority("ROLE_ADMIN")
