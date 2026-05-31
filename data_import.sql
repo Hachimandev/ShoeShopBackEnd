@@ -210,12 +210,11 @@ CREATE TABLE IF NOT EXISTS `product` (
 -- Dumping data for table shoeshop.product: ~6 rows (approximately)
 DELETE FROM `product`;
 INSERT INTO `product` (`product_id`, `brand`, `description`, `gender`, `image`, `material`, `origin`, `price`, `product_name`, `tax`, `category_id`, `supplier_id`) VALUES
-	('PR001', 'đa', 'da', 'Male', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/8bcbb338-2f28-477f-9e4f-10408684fa7f_NikeAirMax270.jpg', 'đa', 'da', 12, 'dada', 1, 'CAT01', 'SUP01'),
-	('PRD01', 'Nike', 'The classic sneaker that started it all.', 'Male', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/AirJordan1RetroHigh.png', 'Leather', 'Vietnam', 189, 'Air Jordan 1 Retro High', 0.1, 'CAT03', 'SUP01'),
-	('PRD02', 'Nike', 'Big Air for big comfort.', 'Female', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/NikeAirMax270.jpg', 'Mesh', 'Vietnam', 150, 'Nike Air Max 270', 0.1, 'CAT02', 'SUP01'),
-	('PRD03', 'Adidas', 'Lightest Ultraboost ever made.', 'Female', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/AdidasUltraboostLight.jpg', 'Primeknit', 'Germany', 180, 'Adidas Ultraboost Light', 0.1, 'CAT02', 'SUP02'),
-	('PRD04', 'Puma', 'The icon from 1968.', 'Male', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/Puma+Suede+Classic.jpg', 'Suede', 'Indonesia', 85, 'Puma Suede Classic', 0.1, 'CAT01', 'SUP03'),
-	('PRD05', 'Nike', 'Vintage basketball style.', 'Male', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/Nike+Blazer+Mid+77.jpg', 'Leather', 'Vietnam', 105, 'Nike Blazer Mid 88', 0.1, 'CAT01', 'SUP01');
+	('PRD01', 'Nike', 'The classic sneaker that started it all.', 'Male', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/AirJordan1RetroHigh.png', 'Leather', 'Vietnam', 2000, 'Air Jordan 1 Retro High', 0.1, 'CAT03', 'SUP01'),
+	('PRD02', 'Nike', 'Big Air for big comfort.', 'Female', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/NikeAirMax270.jpg', 'Mesh', 'Vietnam', 15000, 'Nike Air Max 270', 0.1, 'CAT02', 'SUP01'),
+	('PRD03', 'Adidas', 'Lightest Ultraboost ever made.', 'Female', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/AdidasUltraboostLight.jpg', 'Primeknit', 'Germany', 18000, 'Adidas Ultraboost Light', 0.1, 'CAT02', 'SUP02'),
+	('PRD04', 'Puma', 'The icon from 1968.', 'Male', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/Puma+Suede+Classic.jpg', 'Suede', 'Indonesia', 8500, 'Puma Suede Classic', 0.1, 'CAT01', 'SUP03'),
+	('PRD05', 'Nike', 'Vintage basketball style.', 'Male', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/Nike+Blazer+Mid+77.jpg', 'Leather', 'Vietnam', 10500, 'Nike Blazer Mid 88', 0.1, 'CAT01', 'SUP01');
 
 -- Dumping structure for table shoeshop.product_detail
 CREATE TABLE IF NOT EXISTS `product_detail` (
