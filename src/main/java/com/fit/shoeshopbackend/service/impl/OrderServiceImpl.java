@@ -188,7 +188,9 @@ public class OrderServiceImpl implements OrderService {
         dto.setTotalAmount(savedOrder.getTotalAmount());
         dto.setOrderStatus(savedOrder.getOrderStatus().name());
         
-        emailService.sendOrderEmail(customer.getEmail(), savedOrder);
+        if (savedOrder.getPaymentMethod() != PaymentMethod.SEPAY) {
+            emailService.sendOrderEmail(customer.getEmail(), savedOrder);
+        }
 
         return dto;
     }
