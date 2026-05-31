@@ -10,7 +10,11 @@ import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +27,8 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
 
     @Override
+    @Transactional(readOnly = true)
+    @Cacheable(value = "products", key = "{#searchTerm, #category, #gender, #brand, #sizes, #sort, #minPrice, #maxPrice}")
     public List<Product> getAllProduct(String searchTerm, String category, String gender, String brand, List<String> sizes, String sort, Double minPrice, Double maxPrice) {
 
         Specification<Product> spec = (root, query, criteriaBuilder) -> {
@@ -86,12 +92,27 @@ public class ProductServiceImpl implements ProductService {
             }
         }
 
-        return productRepository.findAll(spec, sortObj);
+        List<Product> products = productRepository.findAll(spec, sortObj);
+        // Eagerly initialize productDetails to cache them
+        products.forEach(p -> {
+            if (p.getProductDetails() != null) {
+                p.getProductDetails().size();
+            }
+        });
+        return products;
     }
 
     @Override
+    @Transactional(readOnly = true)
+    @Cacheable(value = "product", key = "#id", unless = "#result == null")
     public Optional<Product> getProductById(String id) {
-        return productRepository.findById(id);
+        Optional<Product> productOpt = productRepository.findById(id);
+        productOpt.ifPresent(p -> {
+            if (p.getProductDetails() != null) {
+                p.getProductDetails().size();
+            }
+        });
+        return productOpt;
     }
 
     private String generateProductId() {
@@ -103,6 +124,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(value = "products", allEntries = true)
     public Product addProduct(Product product) {
         if (product.getProductId() == null || product.getProductId().isEmpty()) {
             product.setProductId(generateProductId());
@@ -119,12 +141,20 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Caching(evict = {
+        @CacheEvict(value = "product", key = "#id"),
+        @CacheEvict(value = "products", allEntries = true)
+    })
     public Product updateProduct(String id, Product product) {
         product.setProductId(id);
         return productRepository.save(product);
     }
 
     @Override
+    @Caching(evict = {
+        @CacheEvict(value = "product", key = "#id"),
+        @CacheEvict(value = "products", allEntries = true)
+    })
     public void deleteProduct(String id) {
         productRepository.deleteById(id);
     }

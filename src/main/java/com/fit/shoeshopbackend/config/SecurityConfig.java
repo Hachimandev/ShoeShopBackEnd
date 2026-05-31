@@ -29,6 +29,7 @@ public class SecurityConfig {
 
     @Autowired private JwtAuthenticationFilter jwtFilter;
     @Autowired private AccountDetailsService userDetailsService;
+    @Autowired private RateLimitingFilter rateLimitingFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -72,6 +73,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 );
 
+        http.addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
 

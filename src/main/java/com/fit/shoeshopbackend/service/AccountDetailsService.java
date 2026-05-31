@@ -13,9 +13,10 @@ public class AccountDetailsService implements UserDetailsService {
     private AccountRepository AccountRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Account tk = AccountRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy tài Warehouseản: " + username));
+    public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
+        Account tk = AccountRepository.findByUsername(usernameOrEmail)
+                .or(() -> AccountRepository.findByEmail(usernameOrEmail))
+                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy tài khoản với tên đăng nhập hoặc email: " + usernameOrEmail));
         return new AccountDetails(tk);
     }
 }

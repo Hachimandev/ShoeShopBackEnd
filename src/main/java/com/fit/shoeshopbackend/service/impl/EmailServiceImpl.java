@@ -58,6 +58,31 @@ public class EmailServiceImpl implements EmailService {
             System.err.println("Gửi email thất bại, nhưng đơn hàng vẫn được tạo.");
         }
     }
+
+    @Override
+    public void sendOtpEmail(String to, String otp) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(to);
+            helper.setSubject("Mã OTP xác thực đăng ký tài khoản");
+
+            StringBuilder content = new StringBuilder();
+            content.append("<h2>Xác thực Email đăng ký</h2>");
+            content.append("<p>Mã OTP của bạn là: <strong style='font-size: 24px; color: #1a73e8;'>").append(otp).append("</strong></p>");
+            content.append("<p>Mã OTP này có hiệu lực trong vòng <strong>1 phút</strong>. Vui lòng không chia sẻ mã này với bất kỳ ai.</p>");
+            content.append("<br><p>Trân trọng,<br>Shoe Shop</p>");
+
+            helper.setText(content.toString(), true);
+
+            mailSender.send(message);
+            System.out.println("✔ Email OTP đã được gửi đến " + to + " với mã OTP: " + otp);
+        } catch (Exception e) {
+            System.err.println("Gửi email OTP thất bại: " + e.getMessage());
+            System.out.println("🔥 [DEVELOPMENT ONLY] OTP xác thực cho " + to + " là: " + otp);
+        }
+    }
 }
 
 

@@ -29,11 +29,25 @@ services:
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - shoeshop-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: shoeshop_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - shoeshop-network
+
 
   nginx:
     image: nginx:latest

@@ -19,6 +19,6 @@ public class ProductDetail {
 
     @ManyToOne
     @JoinColumn(name = "productId")
-    @JsonBackReference
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Product product;
 }
