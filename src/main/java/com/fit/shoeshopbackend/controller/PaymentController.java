@@ -22,6 +22,19 @@ public class PaymentController {
 
     private final OrderRepository orderRepository;
     private final EmailService emailService;
+    @org.springframework.beans.factory.annotation.Autowired
+    private jakarta.persistence.EntityManager entityManager;
+
+    @Transactional
+    @GetMapping("/fix-db")
+    public ResponseEntity<String> fixDb() {
+        try {
+            entityManager.createNativeQuery("ALTER TABLE orders MODIFY COLUMN order_status ENUM('PENDING', 'PAID', 'SHIPPING', 'DELIVERED', 'CANCELLED', 'RETURNED', 'AWAITING_CANCELLATION')").executeUpdate();
+            return ResponseEntity.ok("Database Enum FIXED!");
+        } catch (Exception e) {
+            return ResponseEntity.ok("Error: " + e.getMessage());
+        }
+    }
 
     @Transactional
     @PostMapping("/sepay/webhook")
