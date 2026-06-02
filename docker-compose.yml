@@ -8,6 +8,7 @@ services:
       MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}
     volumes:
       - mariadb_data:/var/lib/mysql
+      - ./data_import.sql:/docker-entrypoint-initdb.d/data_import.sql
     networks:
       - shoeshop-network
     healthcheck:

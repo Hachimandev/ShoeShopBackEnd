@@ -214,7 +214,22 @@ INSERT INTO `product` (`product_id`, `brand`, `description`, `gender`, `image`, 
 	('PRD02', 'Nike', 'Big Air for big comfort.', 'Female', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/NikeAirMax270.jpg', 'Mesh', 'Vietnam', 15000, 'Nike Air Max 270', 0.1, 'CAT02', 'SUP01'),
 	('PRD03', 'Adidas', 'Lightest Ultraboost ever made.', 'Female', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/AdidasUltraboostLight.jpg', 'Primeknit', 'Germany', 18000, 'Adidas Ultraboost Light', 0.1, 'CAT02', 'SUP02'),
 	('PRD04', 'Puma', 'The icon from 1968.', 'Male', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/Puma+Suede+Classic.jpg', 'Suede', 'Indonesia', 8500, 'Puma Suede Classic', 0.1, 'CAT01', 'SUP03'),
-	('PRD05', 'Nike', 'Vintage basketball style.', 'Male', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/Nike+Blazer+Mid+77.jpg', 'Leather', 'Vietnam', 10500, 'Nike Blazer Mid 88', 0.1, 'CAT01', 'SUP01');
+	('PRD05', 'Nike', 'Vintage basketball style.', 'Male', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/Nike+Blazer+Mid+77.jpg', 'Leather', 'Vietnam', 10500, 'Nike Blazer Mid 77', 0.1, 'CAT01', 'SUP01'),
+	('PRD06', 'Nike', 'Premium basketball shoes.', 'Male', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/G.T.%2BCUT%2B4%2BVW%2BEP.png', 'Synthetic', 'Vietnam', 12500, 'G.T. CUT 4 VW EP', 0.1, 'CAT01', 'SUP01'),
+	('PRD07', 'Adidas', 'Comfortable running shoes.', 'Male', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/giay-adidas-pureboost-5-nam-xam-xanh-01.jpg', 'Mesh', 'Indonesia', 11000, 'Adidas Pureboost 5', 0.1, 'CAT02', 'SUP02'),
+	('PRD08', 'Adidas', 'Daily wear running shoes.', 'Female', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/giay-adidas-response-2-nu-trang-01.png', 'Mesh', 'Vietnam', 9500, 'Adidas Response 2', 0.1, 'CAT02', 'SUP02'),
+	('PRD09', 'Adidas', 'Lightweight running shoes.', 'Male', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/giay-adidas-runfalcon-5-nam-xam-xanh-01.jpg', 'Mesh', 'Indonesia', 8000, 'Adidas Runfalcon 5', 0.1, 'CAT02', 'SUP02'),
+	('PRD10', 'Adidas', 'Ultimate running experience.', 'Female', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/giay-adidas-ultraboost-5x-nu-trang-den-01.jpg', 'Primeknit', 'Vietnam', 19000, 'Adidas Ultraboost 5X', 0.1, 'CAT02', 'SUP02'),
+	('PRD11', 'Puma', 'Classic court style.', 'Female', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/giay-puma-caracal-nu-trang-den-01.jpg', 'Leather', 'China', 7000, 'Puma Caracal', 0.1, 'CAT01', 'SUP03'),
+	('PRD12', 'Puma', 'Performance running.', 'Male', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/giay-puma-scend-pro-nam-den-cam-01.jpg', 'Mesh', 'Vietnam', 8500, 'Puma Scend Pro', 0.1, 'CAT02', 'SUP03'),
+	('PRD13', 'Puma', 'Slip-on comfort.', 'Male', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/giay-puma-softride-astro-slip-on-nam-den-01.jpg', 'Textile', 'Indonesia', 7500, 'Puma Softride Astro', 0.1, 'CAT02', 'SUP03'),
+	('PRD14', 'Puma', 'Stylish everyday wear.', 'Female', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/giay-puma-tori-nu-trang-xanh-ngoc-01.jpg', 'Leather', 'Vietnam', 8000, 'Puma Tori', 0.1, 'CAT01', 'SUP03'),
+	('PRD15', 'Nike', 'Signature Lebron shoes.', 'Male', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/LEBRON%2BXXIII%2BLUX%2BEP.png', 'Synthetic', 'China', 20000, 'Lebron XXIII LUX EP', 0.1, 'CAT01', 'SUP01'),
+	('PRD16', 'New Balance', 'Retro basketball design.', 'Male', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/New+Balance+550.jpg', 'Leather', 'Vietnam', 11500, 'New Balance 550', 0.1, 'CAT01', 'SUP04'),
+	('PRD17', 'Nike', 'Training essentials.', 'Female', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/W%2BNIKE%2BFREE%2BMETCON%2B7.png', 'Mesh', 'Vietnam', 12000, 'Nike Free Metcon 7', 0.1, 'CAT01', 'SUP01'),
+	('PRD18', 'Nike', 'Advanced training.', 'Female', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/W%2BNIKE%2BMETCON%2B10.png', 'Mesh', 'Vietnam', 13500, 'Nike Metcon 10', 0.1, 'CAT01', 'SUP01'),
+	('PRD19', 'Nike', 'Iconic low-top.', 'Female', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/WMNS%2BAIR%2BJORDAN%2B1%2BLOW.png', 'Leather', 'Vietnam', 15500, 'Air Jordan 1 Low', 0.1, 'CAT03', 'SUP01'),
+	('PRD20', 'Nike', 'Elite soccer cleats.', 'Male', 'https://liembucket2004.s3.ap-southeast-2.amazonaws.com/products/ZM%2BSUPERFLY%2B11%2BELITE%2BFG%2BT.png', 'Synthetic', 'China', 22000, 'Zoom Superfly 11 Elite', 0.1, 'CAT01', 'SUP01');
 
 -- Dumping structure for table shoeshop.product_detail
 CREATE TABLE IF NOT EXISTS `product_detail` (
@@ -231,7 +246,6 @@ CREATE TABLE IF NOT EXISTS `product_detail` (
 -- Dumping data for table shoeshop.product_detail: ~10 rows (approximately)
 DELETE FROM `product_detail`;
 INSERT INTO `product_detail` (`product_detail_id`, `color`, `size`, `stock_quantity`, `product_id`) VALUES
-	('DTL549077917428700', 'Black', 40, 1, NULL),
 	('PD01', 'Chicago Red', 40, 9, 'PRD01'),
 	('PD02', 'Chicago Red', 41, 15, 'PRD01'),
 	('PD03', 'Chicago Red', 42, 5, 'PRD01'),
@@ -240,7 +254,22 @@ INSERT INTO `product_detail` (`product_detail_id`, `color`, `size`, `stock_quant
 	('PD06', 'Core Black', 41, 12, 'PRD03'),
 	('PD07', 'Core Black', 42, 18, 'PRD03'),
 	('PD08', 'Navy Blue', 38, 30, 'PRD04'),
-	('PD09', 'White', 40, 15, NULL);
+	('PD09', 'White', 40, 15, 'PRD05'),
+	('PD10', 'Black/Red', 41, 20, 'PRD06'),
+	('PD11', 'Grey/Blue', 42, 10, 'PRD07'),
+	('PD12', 'White', 38, 25, 'PRD08'),
+	('PD13', 'Grey/Green', 40, 15, 'PRD09'),
+	('PD14', 'White/Black', 39, 30, 'PRD10'),
+	('PD15', 'White/Black', 38, 12, 'PRD11'),
+	('PD16', 'Black/Orange', 42, 18, 'PRD12'),
+	('PD17', 'Black', 41, 22, 'PRD13'),
+	('PD18', 'White/Teal', 39, 14, 'PRD14'),
+	('PD19', 'Multi', 43, 8, 'PRD15'),
+	('PD20', 'White', 41, 35, 'PRD16'),
+	('PD21', 'White', 38, 20, 'PRD17'),
+	('PD22', 'White', 39, 15, 'PRD18'),
+	('PD23', 'Black/White', 38, 25, 'PRD19'),
+	('PD24', 'Volt/Black', 42, 5, 'PRD20');
 
 -- Dumping structure for table shoeshop.product_supplier
 CREATE TABLE IF NOT EXISTS `product_supplier` (
