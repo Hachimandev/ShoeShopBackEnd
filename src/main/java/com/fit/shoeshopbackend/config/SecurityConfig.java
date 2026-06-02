@@ -93,9 +93,11 @@ public class SecurityConfig {
                 "https://shoe-shop-front-end-flax.vercel.app"
         ));
         config.setAllowedOriginPatterns(Arrays.asList(
-        "http://localhost:3000", 
-        "https://shoe-shop-front-end-flax.vercel.app"
-    ));
+                "http://localhost:3000",
+                "https://shoe-shop-front-end-flax.vercel.app",
+                "https://my.sepay.vn",
+                "https://*.sepay.vn"
+        ));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setExposedHeaders(List.of("Authorization", "Content-Type"));
