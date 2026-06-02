@@ -86,12 +86,6 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(false);
-        // Allow dev frontend with pattern matching (no credentials needed for public API)
-        config.setAllowedOriginPatterns(List.of("*"));
-        config.setAllowedOriginPatterns(Arrays.asList(
-                "http://localhost:3000",
-                "https://shoe-shop-front-end-flax.vercel.app"
-        ));
         config.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:3000",
                 "https://shoe-shop-front-end-flax.vercel.app",
