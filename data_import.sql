@@ -140,7 +140,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `order_id` varchar(255) NOT NULL,
   `order_date` datetime(6) DEFAULT NULL,
   `order_status` enum('AWAITING_CANCELLATION','CANCELLED','DELIVERED','PENDING','RETURNED','SHIPPING') DEFAULT NULL,
-  `payment_method` enum('CARD','COD','EWALLET') DEFAULT NULL,
+  `payment_method` enum('CARD','COD','EWALLET','SEPAY') DEFAULT NULL,
   `total_amount` double DEFAULT NULL,
   `used_points` int(11) NOT NULL,
   `customer_id` varchar(255) DEFAULT NULL,
