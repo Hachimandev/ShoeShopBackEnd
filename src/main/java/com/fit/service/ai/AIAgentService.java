@@ -55,9 +55,9 @@ public class AIAgentService {
                 historicProducts = null;
             }
 
-            // Search for products if intent is to search/find
+            // Search for products if intent is to search/find or place order
             SuggestedProduct[] suggestedProducts = null;
-            if (analysis.isSearchIntent()) {
+            if (analysis.isSearchIntent() || analysis.isOrderIntent()) {
                 suggestedProducts = searchProducts(userMessage, analysis);
             }
 
@@ -83,6 +83,8 @@ public class AIAgentService {
                 if (suggestedProducts == null || suggestedProducts.length == 0) {
                     suggestedProducts = activeProducts;
                 }
+            } else if (analysis.isOrderIntent()) {
+                aiResponse = "Bạn muốn đặt mẫu giày nào thế? Bạn hãy cho mình biết tên giày cụ thể (ví dụ: Air Jordan 1 Retro High, Nike Air Max 270) kèm theo size và màu sắc nhé!";
             }
 
             return AIChatResponseDTO.builder()
@@ -323,6 +325,9 @@ public class AIAgentService {
                 );
             }
 
+            // Determine payment method (SEPAY or COD)
+            PaymentMethod paymentMethod = extractPaymentMethod(userMessage, conversationHistory);
+
             // Check if user is confirming or denying the order
             boolean isConfirming = isConfirmationMessage(userMessage);
             int quantity = extractQuantityFromHistory(userMessage, conversationHistory);
@@ -330,7 +335,7 @@ public class AIAgentService {
             // If we were in ASKING_FOR_CONFIRMATION, we check for yes/no response
             if ("ASKING_FOR_CONFIRMATION".equals(lastStep)) {
                 if (isConfirming) {
-                    OrderCreatedInfoDTO createdOrder = createOrder(suggestedProducts[0], customer, analysis, quantity);
+                    OrderCreatedInfoDTO createdOrder = createOrder(suggestedProducts[0], customer, analysis, quantity, paymentMethod, conversationHistory);
                     return new OrderFlowResult(
                         createdOrder,
                         String.format("Đơn hàng của bạn đã được tạo thành công! Mã đơn: %s", createdOrder.getOrderId()),
@@ -347,11 +352,13 @@ public class AIAgentService {
                 } else {
                     // Prompt again for confirmation
                     SuggestedProduct topProduct = suggestedProducts[0];
+                    String paymentLabel = (paymentMethod == PaymentMethod.SEPAY) ? "chuyển khoản SePay" : "thanh toán khi nhận hàng (COD)";
                     String confirmMessage = String.format(
-                        "Mình chưa rõ ý bạn. Bạn có xác nhận đặt %d đôi %s (tổng tiền: %,d ₫) giao tới địa chỉ %s, SĐT %s không? (Gõ 'có' hoặc 'không')",
+                        "Mình chưa rõ ý bạn. Bạn có xác nhận đặt %d đôi %s (tổng tiền: %,d ₫, hình thức: %s) giao tới địa chỉ %s, SĐT %s không? (Gõ 'có' hoặc 'không')",
                         quantity,
                         topProduct.getName(),
                         (long) (topProduct.getPrice() * quantity),
+                        paymentLabel,
                         customer.getAddress(),
                         customer.getPhoneNumber()
                     );
@@ -366,11 +373,13 @@ public class AIAgentService {
 
             // If we have all info but haven't asked for confirmation yet
             SuggestedProduct topProduct = suggestedProducts[0];
+            String paymentLabel = (paymentMethod == PaymentMethod.SEPAY) ? "chuyển khoản SePay" : "thanh toán khi nhận hàng (COD)";
             String confirmMessage = String.format(
-                "Mình sẽ đặt %d đôi %s (tổng tiền: %,d ₫) giao tới địa chỉ %s, SĐT %s. Bạn xác nhận chứ?",
+                "Mình sẽ đặt %d đôi %s (tổng tiền: %,d ₫, hình thức: %s) giao tới địa chỉ %s, SĐT %s. Bạn xác nhận chứ?",
                 quantity,
                 topProduct.getName(),
                 (long) (topProduct.getPrice() * quantity),
+                paymentLabel,
                 customer.getAddress(),
                 customer.getPhoneNumber()
             );
@@ -395,7 +404,10 @@ public class AIAgentService {
     /**
      * Create actual order in database
      */
-    private OrderCreatedInfoDTO createOrder(SuggestedProduct topProduct, Customer customer, MessageAnalysis analysis, int quantity) {
+    /**
+     * Create actual order in database
+     */
+    private OrderCreatedInfoDTO createOrder(SuggestedProduct topProduct, Customer customer, MessageAnalysis analysis, int quantity, PaymentMethod paymentMethod, List<ChatMessageDTO> conversationHistory) {
         try {
             if (quantity <= 0) {
                 quantity = 1;
@@ -405,12 +417,51 @@ public class AIAgentService {
             Product product = productRepository.findById(topProduct.getId())
                     .orElseThrow(() -> new RuntimeException("Product not found: " + topProduct.getId()));
 
-            // Find a ProductDetail for this product (with available stock)
-            ProductDetail productDetail = productDetailRepository.findAll().stream()
-                    .filter(pd -> pd.getProduct().getProductId().equals(product.getProductId()) 
-                            && pd.getStockQuantity() > 0)
-                    .findFirst()
-                    .orElseThrow(() -> new RuntimeException("No available product detail found"));
+            // Extract preferred size and color as final variables for lambda compatibility
+            final Integer sizeToMatch = extractSizeFromHistory(conversationHistory);
+            final String colorToMatch = extractColorFromHistory(conversationHistory);
+            final int qtyToMatch = quantity;
+
+            List<ProductDetail> details = productDetailRepository.findAll().stream()
+                    .filter(pd -> pd.getProduct().getProductId().equals(product.getProductId()))
+                    .collect(Collectors.toList());
+
+            ProductDetail productDetail = null;
+
+            // Try to match both size and color
+            if (sizeToMatch != null && colorToMatch != null) {
+                productDetail = details.stream()
+                        .filter(pd -> pd.getSize() == sizeToMatch 
+                                && pd.getColor().toLowerCase().contains(colorToMatch.toLowerCase())
+                                && pd.getStockQuantity() >= qtyToMatch)
+                        .findFirst()
+                        .orElse(null);
+            }
+
+            // Try to match size only
+            if (productDetail == null && sizeToMatch != null) {
+                productDetail = details.stream()
+                        .filter(pd -> pd.getSize() == sizeToMatch && pd.getStockQuantity() >= qtyToMatch)
+                        .findFirst()
+                        .orElse(null);
+            }
+
+            // Try to match color only
+            if (productDetail == null && colorToMatch != null) {
+                productDetail = details.stream()
+                        .filter(pd -> pd.getColor().toLowerCase().contains(colorToMatch.toLowerCase()) 
+                                && pd.getStockQuantity() >= qtyToMatch)
+                        .findFirst()
+                        .orElse(null);
+            }
+
+            // Fallback to first available stock
+            if (productDetail == null) {
+                productDetail = details.stream()
+                        .filter(pd -> pd.getStockQuantity() >= qtyToMatch)
+                        .findFirst()
+                        .orElseThrow(() -> new RuntimeException("No available product detail found with enough stock"));
+            }
 
             double totalAmount = topProduct.getPrice() * quantity;
 
@@ -421,7 +472,7 @@ public class AIAgentService {
             order.setTotalAmount(totalAmount);
             order.setUsedPoints(0);
             order.setOrderStatus(OrderStatus.PENDING);
-            order.setPaymentMethod(PaymentMethod.COD);
+            order.setPaymentMethod(paymentMethod);
             order.setCustomer(customer);
 
             // Create OrderDetail entity
@@ -444,8 +495,9 @@ public class AIAgentService {
             Order savedOrder = orderRepository.save(order);
             orderDetailRepository.save(orderDetail);
 
-            log.info("Order created successfully: {} for customer: {} product: {}", 
-                    savedOrder.getOrderId(), customer.getCustomerId(), product.getProductName());
+            log.info("Order created successfully: {} for customer: {} product: {} detail: {} paymentMethod: {}", 
+                    savedOrder.getOrderId(), customer.getCustomerId(), product.getProductName(), 
+                    productDetail.getProductDetailId(), paymentMethod);
 
             // Create order item info DTO
             OrderItemInfoDTO item = OrderItemInfoDTO.builder()
@@ -455,18 +507,115 @@ public class AIAgentService {
                     .price(topProduct.getPrice())
                     .build();
 
+            String orderLink = (paymentMethod == PaymentMethod.SEPAY) 
+                    ? "/order/" + savedOrder.getOrderId() + "/payment"
+                    : "/profile/orders/" + savedOrder.getOrderId();
+
             return OrderCreatedInfoDTO.builder()
                     .orderId(savedOrder.getOrderId())
                     .status(savedOrder.getOrderStatus().toString())
                     .totalAmount(totalAmount)
                     .items(new OrderItemInfoDTO[]{item})
-                    .orderLink("/profile/orders/" + savedOrder.getOrderId())
+                    .orderLink(orderLink)
                     .build();
 
         } catch (Exception e) {
             log.error("Error creating order", e);
             throw new RuntimeException("Failed to create order: " + e.getMessage());
         }
+    }
+
+    /**
+     * Extract payment method from current message or history
+     */
+    private PaymentMethod extractPaymentMethod(String currentMessage, List<ChatMessageDTO> history) {
+        String lowerMsg = currentMessage != null ? currentMessage.toLowerCase() : "";
+        String[] sepayKeywords = {"sepay", "chuyển khoản", "ck", "qr", "ngân hàng", "banking", "bank", "momo", "online", "thẻ"};
+        for (String keyword : sepayKeywords) {
+            if (lowerMsg.contains(keyword)) {
+                return PaymentMethod.SEPAY;
+            }
+        }
+        
+        // Also check if price range indicates VND test (2000 to 20000)
+        // (Just a nice fallback, but we will mostly rely on explicit keywords or history)
+        if (history != null) {
+            for (int i = history.size() - 1; i >= 0; i--) {
+                ChatMessageDTO msg = history.get(i);
+                if (msg.getContent() != null) {
+                    String histLower = msg.getContent().toLowerCase();
+                    for (String keyword : sepayKeywords) {
+                        if (histLower.contains(keyword)) {
+                            return PaymentMethod.SEPAY;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return PaymentMethod.COD;
+    }
+
+    private Integer extractSizeFromMessage(String message) {
+        if (message == null) return null;
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\b(3[5-9]|4[0-6])\\b");
+        java.util.regex.Matcher matcher = pattern.matcher(message);
+        if (matcher.find()) {
+            try {
+                return Integer.parseInt(matcher.group(1));
+            } catch (NumberFormatException e) {
+                // Ignore
+            }
+        }
+        return null;
+    }
+
+    private String extractColorFromMessage(String message) {
+        if (message == null) return null;
+        String lowerMsg = message.toLowerCase();
+        String[] colors = {"red", "black", "white", "blue", "grey", "green", "orange", "teal", "yellow",
+                           "đỏ", "đen", "trắng", "xanh", "xám", "cam", "vàng"};
+        for (String color : colors) {
+            if (lowerMsg.contains(color)) {
+                switch (color) {
+                    case "đỏ": case "red": return "red";
+                    case "đen": case "black": return "black";
+                    case "trắng": case "white": return "white";
+                    case "xanh": case "blue": return "blue";
+                    case "xám": case "grey": return "grey";
+                    case "cam": case "orange": return "orange";
+                    case "teal": return "teal";
+                    default: return color;
+                }
+            }
+        }
+        return null;
+    }
+
+    private Integer extractSizeFromHistory(List<ChatMessageDTO> history) {
+        if (history != null) {
+            for (int i = history.size() - 1; i >= 0; i--) {
+                ChatMessageDTO msg = history.get(i);
+                if ("user".equalsIgnoreCase(msg.getRole())) {
+                    Integer size = extractSizeFromMessage(msg.getContent());
+                    if (size != null) return size;
+                }
+            }
+        }
+        return null;
+    }
+
+    private String extractColorFromHistory(List<ChatMessageDTO> history) {
+        if (history != null) {
+            for (int i = history.size() - 1; i >= 0; i--) {
+                ChatMessageDTO msg = history.get(i);
+                if ("user".equalsIgnoreCase(msg.getRole())) {
+                    String color = extractColorFromMessage(msg.getContent());
+                    if (color != null) return color;
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -488,13 +637,14 @@ public class AIAgentService {
         // 2. Extract address
         // Option A: Explicit address prefix
         java.util.regex.Pattern addressPattern = java.util.regex.Pattern.compile(
-            "(?:địa\\s*chỉ|address)\\s*:?\\s*([^,\\n]+)",
+            "(?:địa\\s*chỉ|address)\\s*:?\\s*([^\\n]+)",
             java.util.regex.Pattern.CASE_INSENSITIVE
         );
         java.util.regex.Matcher addressMatcher = addressPattern.matcher(message);
         if (addressMatcher.find()) {
             String addr = addressMatcher.group(1).trim();
             // Clean up if it contains phone number or keywords
+            addr = addr.replaceAll("(?i)(?:sdt|sđt|phone|số|điện|đt)?\\s*:?\\s*(0[3|5|7|8|9][0-9]{8}|[0-9]{9,11})", "");
             addr = addr.replaceAll("(?i)(?:sdt|sđt|phone|số|điện|đt).*", "").replaceAll("[,:\\-\\s]+$", "").trim();
             if (!addr.isEmpty() && addr.length() > 3) {
                 info.address = addr;
