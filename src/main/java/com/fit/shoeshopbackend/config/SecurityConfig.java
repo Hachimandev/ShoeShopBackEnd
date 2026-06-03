@@ -69,7 +69,7 @@ public class SecurityConfig {
                         
                         .requestMatchers("/api/ai/**").permitAll()
                         .requestMatchers("/api/payment/**").permitAll() // Cho phép Webhook SePay truy cập không cần token
-                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll().requestMatchers("/error").permitAll()
 
                         .anyRequest().authenticated()
                 );
@@ -86,17 +86,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(false);
-        // Allow dev frontend with pattern matching (no credentials needed for public API)
-        config.setAllowedOriginPatterns(List.of("*"));
-        config.setAllowedOriginPatterns(Arrays.asList(
-                "http://localhost:3000",
-                "https://shoe-shop-front-end-flax.vercel.app"
-        ));
         config.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:3000",
                 "https://shoe-shop-front-end-flax.vercel.app",
                 "https://my.sepay.vn",
-                "https://*.sepay.vn"
+                "https://*.sepay.vn", "*"
         ));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
