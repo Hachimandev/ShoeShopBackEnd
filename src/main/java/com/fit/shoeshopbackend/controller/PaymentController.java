@@ -50,12 +50,19 @@ public class PaymentController {
                 return ResponseEntity.ok(java.util.Map.of("success", true, "message", "Empty content, ignored."));
             }
 
-            // Extract Order ID from content using a regex pattern, e.g., looking for "ORD-"
-            Pattern pattern = Pattern.compile("(ORD-\\d{8}-\\d+)");
+            // Các ngân hàng thường xóa ký tự đặc biệt (như dấu gạch ngang) trong nội dung chuyển khoản.
+            // Ví dụ: ORD-20260603-457 có thể biến thành ORD20260603457.
+            // Biểu thức regex này làm cho dấu gạch ngang trở thành tùy chọn (?) và chia thành 2 nhóm: nhóm ngày (8 số) và nhóm số ngẫu nhiên.
+            Pattern pattern = Pattern.compile("ORD-?(\\d{8})-?(\\d+)");
             Matcher matcher = pattern.matcher(content);
 
             if (matcher.find()) {
-                String orderId = matcher.group(1);
+                String datePart = matcher.group(1);
+                String randomPart = matcher.group(2);
+                
+                // Tái tạo lại chính xác mã đơn hàng gốc trong Database (có dấu gạch ngang)
+                String orderId = "ORD-" + datePart + "-" + randomPart;
+                
                 Optional<Order> optionalOrder = orderRepository.findById(orderId);
 
                 if (optionalOrder.isPresent()) {
