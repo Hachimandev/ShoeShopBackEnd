@@ -46,19 +46,24 @@ public class AuthController {
     @Autowired private com.fit.shoeshopbackend.service.EmailService emailService;
 
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody AuthRequest req) {
-        Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword())
-        );
-        var userDetails = (AccountDetails) auth.getPrincipal();
-        String token = jwtUtil.generateToken(userDetails);
+    public ResponseEntity<?> login(@RequestBody AuthRequest req) {
+        try {
+            Authentication auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword())
+            );
+            var userDetails = (AccountDetails) auth.getPrincipal();
+            String token = jwtUtil.generateToken(userDetails);
 
+            List<String> roles = userDetails.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .toList();
 
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .toList();
-
-        return new AuthResponse(token, userDetails.getUsername(), roles);
+            return ResponseEntity.ok(new AuthResponse(token, userDetails.getUsername(), roles));
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(401).body(Map.of("error", "Tên đăng nhập hoặc mật khẩu không đúng."));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Đã xảy ra lỗi hệ thống: " + e.getMessage()));
+        }
     }
 
     @PostMapping("/register/send-otp")
