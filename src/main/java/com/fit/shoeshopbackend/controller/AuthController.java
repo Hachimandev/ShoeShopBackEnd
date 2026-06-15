@@ -6,6 +6,7 @@ import com.fit.shoeshopbackend.config.AccountDetails;
 import com.fit.shoeshopbackend.dto.AuthRequest;
 import com.fit.shoeshopbackend.dto.AuthResponse;
 import com.fit.shoeshopbackend.dto.GoogleLoginRequest;
+import com.fit.shoeshopbackend.dto.RefreshTokenRequest;
 import com.fit.shoeshopbackend.dto.RegisterRequest;
 import com.fit.shoeshopbackend.model.Customer;
 import com.fit.shoeshopbackend.model.Role;
@@ -58,6 +59,8 @@ public class AuthController {
             );
             var userDetails = (AccountDetails) auth.getPrincipal();
             String token = jwtUtil.generateToken(userDetails);
+            String refreshToken = jwtUtil.generateRefreshToken();
+            redisTemplate.opsForValue().set("refresh_token:" + refreshToken, userDetails.getUsername(), 7, TimeUnit.DAYS);
 
             List<String> roles = userDetails.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
@@ -66,7 +69,7 @@ public class AuthController {
             Account user = userRepository.findByUsername(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Account not found"));
 
-            return ResponseEntity.ok(new AuthResponse(token, userDetails.getUsername(), user.getAccountId(), roles));
+            return ResponseEntity.ok(new AuthResponse(token, refreshToken, userDetails.getUsername(), user.getAccountId(), roles));
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(401).body(Map.of("error", "Tên đăng nhập hoặc mật khẩu không đúng."));
         } catch (Exception e) {
@@ -240,14 +243,46 @@ public class AuthController {
             // --- tạo JWT ---
             AccountDetails details = new AccountDetails(user);
             String token = jwtUtil.generateToken(details);
+            String refreshToken = jwtUtil.generateRefreshToken();
+            redisTemplate.opsForValue().set("refresh_token:" + refreshToken, user.getUsername(), 7, TimeUnit.DAYS);
 
             List<String> roles = user.getRoles().stream().map(Enum::name).toList();
 
-            return ResponseEntity.ok(new AuthResponse(token, user.getUsername(), user.getAccountId(), roles));
+            return ResponseEntity.ok(new AuthResponse(token, refreshToken, user.getUsername(), user.getAccountId(), roles));
 
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "Google login failed: " + e.getMessage()));
         }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest request) {
+        String requestRefreshToken = request.getRefreshToken();
+        if (requestRefreshToken == null || requestRefreshToken.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Refresh token is missing."));
+        }
+
+        String username = redisTemplate.opsForValue().get("refresh_token:" + requestRefreshToken);
+        if (username == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid or expired refresh token."));
+        }
+
+        Account user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "User not found."));
+        }
+
+        AccountDetails userDetails = new AccountDetails(user);
+        String newToken = jwtUtil.generateToken(userDetails);
+        String newRefreshToken = jwtUtil.generateRefreshToken();
+
+        // Xóa token cũ và lưu token mới
+        redisTemplate.delete("refresh_token:" + requestRefreshToken);
+        redisTemplate.opsForValue().set("refresh_token:" + newRefreshToken, username, 7, TimeUnit.DAYS);
+
+        List<String> roles = user.getRoles().stream().map(Enum::name).toList();
+
+        return ResponseEntity.ok(new AuthResponse(newToken, newRefreshToken, username, user.getAccountId(), roles));
     }
 
     @PostMapping("/forgot-password/send-otp")
