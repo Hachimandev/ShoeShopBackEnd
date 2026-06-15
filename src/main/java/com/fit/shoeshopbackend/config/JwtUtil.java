@@ -62,6 +62,10 @@ public class JwtUtil {
             return false;
         }
     }
+
+    public String generateRefreshToken() {
+        return UUID.randomUUID().toString();
+    }
 }
 
 
