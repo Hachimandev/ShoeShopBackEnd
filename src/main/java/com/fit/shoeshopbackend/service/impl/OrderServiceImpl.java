@@ -38,6 +38,7 @@ public class OrderServiceImpl implements OrderService {
     private final PromotionRepository promotionRepository;
     private final ProductDetailRepository productDetailRepository;
     private final OrderDetailRepository orderDetailRepository;
+    private final ProductRepository productRepository;
 
     private final EmailService emailService;
     private final CustomerService customerService;
@@ -176,6 +177,10 @@ public class OrderServiceImpl implements OrderService {
             }
             productDetail.setStockQuantity(productDetail.getStockQuantity() - item.getQuantity());
             productDetailRepository.save(productDetail);
+
+            Product product = productDetail.getProduct();
+            product.setSoldQuantity(product.getSoldQuantity() + item.getQuantity());
+            productRepository.save(product);
 
             return detail;
         }).toList();

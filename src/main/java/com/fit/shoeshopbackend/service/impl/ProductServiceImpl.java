@@ -89,6 +89,10 @@ public class ProductServiceImpl implements ProductService {
                 sortObj = Sort.by(Sort.Direction.ASC, "price");
             } else if (sort.equalsIgnoreCase("price_high")) {
                 sortObj = Sort.by(Sort.Direction.DESC, "price");
+            } else if (sort.equalsIgnoreCase("best_selling")) {
+                sortObj = Sort.by(Sort.Direction.DESC, "soldQuantity");
+            } else if (sort.equalsIgnoreCase("newest")) {
+                sortObj = Sort.by(Sort.Direction.DESC, "productId"); // Assuming productId is generated sequentially or by time
             }
         }
 
