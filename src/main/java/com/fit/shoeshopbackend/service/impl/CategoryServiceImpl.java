@@ -57,14 +57,12 @@ public class CategoryServiceImpl implements CategoryService {
         Row headerRow = sheet.createRow(0);
         headerRow.createCell(0).setCellValue("Category ID");
         headerRow.createCell(1).setCellValue("Name");
-        headerRow.createCell(2).setCellValue("Description");
 
         int rowNum = 1;
         for (Category c : categories) {
             Row row = sheet.createRow(rowNum++);
             row.createCell(0).setCellValue(c.getCategoryId());
             row.createCell(1).setCellValue(c.getCategoryName());
-            row.createCell(2).setCellValue(c.getDescription());
         }
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
