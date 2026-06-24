@@ -15,4 +15,6 @@ public interface CategoryService {
     Category updateCategory(String id, Category category);
 
     void deleteCategory(String id);
+
+    byte[] exportToExcel() throws java.io.IOException;
 }

@@ -19,6 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
@@ -161,5 +167,36 @@ public class ProductServiceImpl implements ProductService {
     })
     public void deleteProduct(String id) {
         productRepository.deleteById(id);
+    }
+
+    @Override
+    public byte[] exportToExcel() throws IOException {
+        List<Product> products = productRepository.findAll();
+
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Products");
+
+        Row headerRow = sheet.createRow(0);
+        headerRow.createCell(0).setCellValue("Product ID");
+        headerRow.createCell(1).setCellValue("Name");
+        headerRow.createCell(2).setCellValue("Brand");
+        headerRow.createCell(3).setCellValue("Price");
+        headerRow.createCell(4).setCellValue("Sold Quantity");
+
+        int rowNum = 1;
+        for (Product p : products) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(p.getProductId());
+            row.createCell(1).setCellValue(p.getProductName());
+            row.createCell(2).setCellValue(p.getBrand());
+            row.createCell(3).setCellValue(p.getPrice());
+            row.createCell(4).setCellValue(p.getSoldQuantity());
+        }
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+
+        return outputStream.toByteArray();
     }
 }

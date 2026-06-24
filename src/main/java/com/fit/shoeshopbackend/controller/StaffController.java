@@ -185,6 +185,15 @@ public class StaffController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gender cannot be empty");
         }
     }
+
+    @GetMapping("/export/excel")
+    public ResponseEntity<byte[]> exportToExcel() throws IOException {
+        byte[] excelFile = staffService.exportToExcel();
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=Staffs.xlsx")
+                .contentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM)
+                .body(excelFile);
+    }
 }
 
 

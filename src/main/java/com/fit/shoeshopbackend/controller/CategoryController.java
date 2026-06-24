@@ -42,4 +42,13 @@ public class CategoryController {
         categoryService.deleteCategory(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/export/excel")
+    public ResponseEntity<byte[]> exportToExcel() throws java.io.IOException {
+        byte[] excelFile = categoryService.exportToExcel();
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=Categories.xlsx")
+                .contentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM)
+                .body(excelFile);
+    }
 }

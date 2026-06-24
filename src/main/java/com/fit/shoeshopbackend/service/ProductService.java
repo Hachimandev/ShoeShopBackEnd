@@ -16,6 +16,8 @@ public interface ProductService {
     Product updateProduct(String id, Product Product);
 
     void deleteProduct(String id);
+
+    byte[] exportToExcel() throws java.io.IOException;
 }
 
 

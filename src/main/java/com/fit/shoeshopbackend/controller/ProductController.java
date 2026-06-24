@@ -75,6 +75,15 @@ public class ProductController {
         ProductService.deleteProduct(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/export/excel")
+    public ResponseEntity<byte[]> exportToExcel() throws java.io.IOException {
+        byte[] excelFile = ProductService.exportToExcel();
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=Products.xlsx")
+                .contentType(org.springframework.http.MediaType.APPLICATION_OCTET_STREAM)
+                .body(excelFile);
+    }
 }
 
 

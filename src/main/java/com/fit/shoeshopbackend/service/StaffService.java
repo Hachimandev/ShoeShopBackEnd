@@ -19,4 +19,6 @@ public interface StaffService {
     Optional<Staff> update(String id, Staff staff);
 
     void deleteById(String id);
+
+    byte[] exportToExcel() throws java.io.IOException;
 }

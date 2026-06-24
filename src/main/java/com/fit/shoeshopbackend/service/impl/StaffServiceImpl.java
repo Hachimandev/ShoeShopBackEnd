@@ -12,6 +12,12 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
@@ -91,5 +97,40 @@ public class StaffServiceImpl implements StaffService {
     @Override
     public void deleteById(String id) {
         staffRepository.deleteById(id);
+    }
+
+    @Override
+    public byte[] exportToExcel() throws IOException {
+        List<Staff> staffs = staffRepository.findAll();
+
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Staff");
+
+        Row headerRow = sheet.createRow(0);
+        headerRow.createCell(0).setCellValue("Staff ID");
+        headerRow.createCell(1).setCellValue("Full Name");
+        headerRow.createCell(2).setCellValue("Email");
+        headerRow.createCell(3).setCellValue("Phone");
+        headerRow.createCell(4).setCellValue("Department");
+        headerRow.createCell(5).setCellValue("Position");
+        headerRow.createCell(6).setCellValue("Work Status");
+
+        int rowNum = 1;
+        for (Staff s : staffs) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(s.getStaffId());
+            row.createCell(1).setCellValue(s.getFullName());
+            row.createCell(2).setCellValue(s.getEmail());
+            row.createCell(3).setCellValue(s.getPhoneNumber());
+            row.createCell(4).setCellValue(s.getDepartment() != null ? s.getDepartment().name() : "");
+            row.createCell(5).setCellValue(s.getPosition() != null ? s.getPosition().name() : "");
+            row.createCell(6).setCellValue(s.getWorkStatus() != null ? s.getWorkStatus().name() : "");
+        }
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+
+        return outputStream.toByteArray();
     }
 }
